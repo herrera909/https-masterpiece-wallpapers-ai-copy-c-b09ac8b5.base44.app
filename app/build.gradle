@@ -7,7 +7,7 @@ android {
     compileSdk 36
 
     defaultConfig {
-        applicationId "com.masterpiece.wallpapers.ai"
+        applicationId "com.masterpiece.wallpapers.ai1"
         minSdk 23
         targetSdk 36
         versionCode 3
