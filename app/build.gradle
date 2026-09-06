@@ -1,0 +1,22 @@
+plugins {
+    id "com.android.application"
+}
+
+android {
+    namespace "com.masterpiece.wallpapers.ai"
+    compileSdk 36
+
+    defaultConfig {
+        applicationId "com.masterpiece.wallpapers.ai"
+        minSdk 21
+        targetSdk 36
+        versionCode 3
+        versionName "1.2"
+    }
+}
+
+dependencies {
+    implementation "androidx.appcompat:appcompat:1.7.1"
+    implementation "com.google.android.material:material:1.12.0"
+    implementation "com.google.android.gms:play-services-ads:24.5.0"
+}
