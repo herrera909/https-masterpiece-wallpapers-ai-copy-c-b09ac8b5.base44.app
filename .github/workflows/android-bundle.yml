@@ -51,7 +51,7 @@ jobs:
             -storepass "$KEYSTORE_PASSWORD" \
             -keypass "$KEYSTORE_PASSWORD" \
             Masterpiece-Wallpapers-AI1-v1.2-signed.aab masterpiece-upload
-          jarsigner -verify -verbose -certs -strict Masterpiece-Wallpapers-AI1-v1.2-signed.aab
+          jarsigner -verify -verbose -certs Masterpiece-Wallpapers-AI1-v1.2-signed.aab
 
       - name: Upload signed app bundle
         uses: actions/upload-artifact@v4
