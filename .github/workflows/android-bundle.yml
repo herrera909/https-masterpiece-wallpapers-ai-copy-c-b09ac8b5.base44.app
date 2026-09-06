@@ -35,10 +35,27 @@ jobs:
       - name: Build release bundle
         run: gradle --no-daemon :app:bundleRelease
 
-      - name: Upload app bundle
+      - name: Restore encrypted upload keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/upload-key.jks"
+
+      - name: Sign and verify release bundle
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          cp app/build/outputs/bundle/release/app-release.aab Masterpiece-Wallpapers-AI1-v1.2-signed.aab
+          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
+            -keystore "$RUNNER_TEMP/upload-key.jks" \
+            -storepass "$KEYSTORE_PASSWORD" \
+            -keypass "$KEYSTORE_PASSWORD" \
+            Masterpiece-Wallpapers-AI1-v1.2-signed.aab masterpiece-upload
+          jarsigner -verify -verbose -certs -strict Masterpiece-Wallpapers-AI1-v1.2-signed.aab
+
+      - name: Upload signed app bundle
         uses: actions/upload-artifact@v4
         with:
-          name: masterpiece-release-unsigned-aab
-          path: app/build/outputs/bundle/release/app-release.aab
+          name: masterpiece-ai1-release-signed-aab
+          path: Masterpiece-Wallpapers-AI1-v1.2-signed.aab
           if-no-files-found: error
-
