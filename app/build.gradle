@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         applicationId "com.masterpiece.wallpapers.ai"
-        minSdk 21
+        minSdk 23
         targetSdk 36
         versionCode 3
         versionName "1.2"
