@@ -1,124 +1,67 @@
 package com.masterpiece.wallpapers.ai;
 
-import android.os.Bundle;
-import android.view.Gravity;
-import android.view.View;
-import android.view.inputmethod.InputMethodManager;
-import android.content.Context;
+import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.graphics.Color;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.ScrollView;
-import android.widget.TextView;
-
+import android.net.Uri;
+import android.os.Bundle;
+import android.webkit.CookieManager;
+import android.webkit.WebChromeClient;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdView;
-import com.google.android.gms.ads.MobileAds;
-import com.google.android.gms.ads.AdSize;
-import com.google.android.gms.ads.interstitial.InterstitialAd;
-import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
-import com.google.android.gms.ads.LoadAdError;
-
 public class MainActivity extends AppCompatActivity {
-    private static final String BANNER_AD_UNIT = "ca-app-pub-6387191957285572/9053057571";
-    private static final String INTERSTITIAL_AD_UNIT = "ca-app-pub-6387191957285572/7711171269";
+    private static final String APP_URL = "https://just-prime-pixel-ai.base44.app";
+    private WebView webView;
 
-    private EditText promptInput;
-    private ImageView previewImage;
-    private TextView imageUrlText;
-    private InterstitialAd interstitialAd;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        MobileAds.initialize(this, initializationStatus -> {});
-
-        ScrollView scrollView = new ScrollView(this);
-        LinearLayout root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(32, 32, 32, 32);
-        root.setGravity(Gravity.CENTER_HORIZONTAL);
-        scrollView.addView(root);
-
-        promptInput = new EditText(this);
-        promptInput.setHint("Wallpaper Idea");
-        promptInput.setSingleLine(false);
-        root.addView(promptInput, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT));
-
-        Button generateButton = new Button(this);
-        generateButton.setText("Generate AI Wallpaper");
-        root.addView(generateButton);
-
-        previewImage = new ImageView(this);
-        previewImage.setBackgroundColor(Color.rgb(245, 245, 245));
-        previewImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        root.addView(previewImage, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                1200));
-
-        imageUrlText = new TextView(this);
-        imageUrlText.setText("Enter a wallpaper idea, then tap generate.");
-        imageUrlText.setPadding(0, 24, 0, 24);
-        root.addView(imageUrlText);
-
-        AdView banner = new AdView(this);
-        banner.setAdSize(AdSize.BANNER);
-        banner.setAdUnitId(BANNER_AD_UNIT);
-        root.addView(banner);
-        banner.loadAd(new AdRequest.Builder().build());
-
-        generateButton.setOnClickListener(v -> generateWallpaper());
-        loadInterstitial();
-
-        setContentView(scrollView);
+    @SuppressLint("SetJavaScriptEnabled")
+    @Override protected void onCreate(Bundle state) {
+        super.onCreate(state);
+        webView = new WebView(this);
+        webView.setBackgroundColor(Color.rgb(5, 8, 22));
+        WebSettings settings = webView.getSettings();
+        settings.setJavaScriptEnabled(true);
+        settings.setDomStorageEnabled(true);
+        settings.setDatabaseEnabled(true);
+        settings.setAllowFileAccess(false);
+        settings.setAllowContentAccess(false);
+        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
+        settings.setUserAgentString(settings.getUserAgentString() + " MasterpieceWallpapersAI/1.4");
+        CookieManager.getInstance().setAcceptCookie(true);
+        CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
+        webView.setWebChromeClient(new WebChromeClient());
+        webView.setWebViewClient(new WebViewClient() {
+            @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                Uri uri = request.getUrl();
+                String scheme = uri.getScheme();
+                if ("https".equalsIgnoreCase(scheme) || "http".equalsIgnoreCase(scheme)) return false;
+                try { startActivity(new Intent(Intent.ACTION_VIEW, uri)); } catch (Exception ignored) {}
+                return true;
+            }
+        });
+        webView.setDownloadListener((url, agent, disposition, type, length) -> {
+            try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); } catch (Exception ignored) {}
+        });
+        setContentView(webView);
+        if (state == null) webView.loadUrl(APP_URL); else webView.restoreState(state);
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override public void handleOnBackPressed() {
+                if (webView.canGoBack()) webView.goBack(); else finish();
+            }
+        });
     }
 
-    private void generateWallpaper() {
-        String prompt = promptInput.getText().toString().trim();
-        if (prompt.isEmpty()) {
-            promptInput.setError("Enter a wallpaper idea");
-            return;
-        }
-
-        hideKeyboard();
-        String encoded = prompt.replace(" ", "%20");
-        String url = "https://image.pollinations.ai/prompt/" + encoded + "?width=1080&height=1920";
-        imageUrlText.setText(url);
-        new ImageLoadTask(previewImage).execute(url);
-
-        if (interstitialAd != null) {
-            interstitialAd.show(this);
-            interstitialAd = null;
-        }
-        loadInterstitial();
+    @Override protected void onSaveInstanceState(Bundle state) {
+        webView.saveState(state);
+        super.onSaveInstanceState(state);
     }
 
-    private void loadInterstitial() {
-        InterstitialAd.load(this, INTERSTITIAL_AD_UNIT, new AdRequest.Builder().build(),
-                new InterstitialAdLoadCallback() {
-                    @Override
-                    public void onAdLoaded(InterstitialAd ad) {
-                        interstitialAd = ad;
-                    }
-
-                    @Override
-                    public void onAdFailedToLoad(LoadAdError error) {
-                        interstitialAd = null;
-                    }
-                });
-    }
-
-    private void hideKeyboard() {
-        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-        View current = getCurrentFocus();
-        if (imm != null && current != null) {
-            imm.hideSoftInputFromWindow(current.getWindowToken(), 0);
-        }
+    @Override protected void onDestroy() {
+        if (webView != null) webView.destroy();
+        super.onDestroy();
     }
 }
