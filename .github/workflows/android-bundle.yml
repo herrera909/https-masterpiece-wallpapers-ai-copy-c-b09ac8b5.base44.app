@@ -32,6 +32,11 @@ jobs:
         with:
           gradle-version: "8.13"
 
+      - name: Restore approved launcher artwork
+        run: |
+          mkdir -p app/src/main/res/drawable-nodpi
+          base64 --decode launcher-icon.png.b64 > app/src/main/res/drawable-nodpi/masterpiece_icon.png
+
       - name: Build release bundle
         run: gradle --no-daemon :app:bundleRelease
 
@@ -45,17 +50,17 @@ jobs:
         env:
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
-          cp app/build/outputs/bundle/release/app-release.aab Masterpiece-Wallpapers-AI1-v1.2-signed.aab
+          cp app/build/outputs/bundle/release/app-release.aab Masterpiece-Wallpapers-AI1-v1.5-signed.aab
           jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
             -keystore "$RUNNER_TEMP/upload-key.jks" \
             -storepass "$KEYSTORE_PASSWORD" \
             -keypass "$KEYSTORE_PASSWORD" \
-            Masterpiece-Wallpapers-AI1-v1.2-signed.aab masterpiece-upload
-          jarsigner -verify -verbose -certs Masterpiece-Wallpapers-AI1-v1.2-signed.aab
+            Masterpiece-Wallpapers-AI1-v1.5-signed.aab masterpiece-upload
+          jarsigner -verify -verbose -certs Masterpiece-Wallpapers-AI1-v1.5-signed.aab
 
       - name: Upload signed app bundle
         uses: actions/upload-artifact@v4
         with:
           name: masterpiece-ai1-release-signed-aab
-          path: Masterpiece-Wallpapers-AI1-v1.2-signed.aab
+          path: Masterpiece-Wallpapers-AI1-v1.5-signed.aab
           if-no-files-found: error
