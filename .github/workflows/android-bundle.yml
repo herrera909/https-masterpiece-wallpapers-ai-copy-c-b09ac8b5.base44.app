@@ -56,7 +56,7 @@ jobs:
       - name: Verify test APK
         run: |
           cp app/build/outputs/apk/debug/app-debug.apk Masterpiece-Wallpapers-AI1-v1.6-test.apk
-          apksigner verify --verbose Masterpiece-Wallpapers-AI1-v1.6-test.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose Masterpiece-Wallpapers-AI1-v1.6-test.apk
 
       - name: Restore encrypted upload keystore
         env:
