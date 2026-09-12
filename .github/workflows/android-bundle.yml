@@ -38,7 +38,20 @@ jobs:
           base64 --decode launcher-icon.png.b64 > app/src/main/res/drawable-nodpi/masterpiece_icon.png
 
       - name: Build test APK and release bundle
-        run: gradle --no-daemon :app:assembleDebug :app:bundleRelease
+        run: |
+          set +e
+          gradle --no-daemon :app:assembleDebug :app:bundleRelease > android-build.log 2>&1
+          result=$?
+          cat android-build.log
+          exit $result
+
+      - name: Upload build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-build-diagnostics
+          path: android-build.log
+          if-no-files-found: warn
 
       - name: Verify test APK
         run: |
