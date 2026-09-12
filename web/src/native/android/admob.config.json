@@ -1,0 +1,24 @@
+{
+  "android_package_name": "com.masterpiece.wallpapers.ai1",
+  "admob": {
+    "app_id": "ca-app-pub-6387191957285572~4480199819",
+    "production_ad_units": {
+      "banner": "ca-app-pub-6387191957285572/5080519948",
+      "interstitial": "ca-app-pub-6387191957285572/3767438275",
+      "rewarded": "ca-app-pub-6387191957285572/2454356609"
+    },
+    "test_ad_units": {
+      "banner": "ca-app-pub-3940256099942544/6300978111",
+      "interstitial": "ca-app-pub-3940256099942544/1033173712",
+      "rewarded": "ca-app-pub-3940256099942544/5224354917"
+    },
+    "rules": [
+      "Initialize Google Mobile Ads only in the native Android runtime (never in the web app).",
+      "Use the test ad unit IDs when BuildConfig.DEBUG is true; production IDs only in release builds.",
+      "Banner: adaptive anchored banner, top placement, must not cover the bottom tab navigation.",
+      "Interstitial: only at natural breaks; never on app launch or during wallpaper generation.",
+      "Rewarded: required before free wallpaper generation/download; grant the action only from the earned-reward callback.",
+      "Premium users must never see any ad."
+    ]
+  }
+}

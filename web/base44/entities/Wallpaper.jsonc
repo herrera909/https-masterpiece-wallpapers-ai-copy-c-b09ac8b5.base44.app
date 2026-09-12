@@ -1,0 +1,41 @@
+{
+  "name": "Wallpaper",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "title": "Title"
+    },
+    "prompt": {
+      "type": "string",
+      "title": "Prompt"
+    },
+    "image_url": {
+      "type": "string",
+      "format": "uri",
+      "title": "Image URL"
+    },
+    "style": {
+      "type": "string",
+      "enum": [
+        "cinematic",
+        "cyberpunk",
+        "fantasy",
+        "minimal",
+        "abstract",
+        "anime"
+      ],
+      "default": "cinematic",
+      "title": "Style"
+    },
+    "is_favorite": {
+      "type": "boolean",
+      "default": false,
+      "title": "Favorite"
+    }
+  },
+  "required": [
+    "prompt",
+    "image_url"
+  ]
+}

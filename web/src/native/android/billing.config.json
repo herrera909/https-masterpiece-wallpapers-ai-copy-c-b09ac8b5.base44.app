@@ -1,0 +1,19 @@
+{
+  "android_package_name": "com.masterpiece.wallpapers.ai1",
+  "subscription": {
+    "product_id": "masterpiece_premium_monthly",
+    "type": "auto_renewing",
+    "billing_period": "P1M",
+    "display_price_usd": "9.99"
+  },
+  "website_checkout": {
+    "provider": "base44_payments_wix",
+    "product_id": "premium"
+  },
+  "rules": [
+    "Android purchases must launch Google Play Billing through MasterpieceNativeBilling.",
+    "The website must use the existing Base44/Wix checkout and must never call Google Play Billing.",
+    "Do not grant Premium until the Google Play purchase token is verified by the backend.",
+    "Acknowledge successful Google Play purchases after verification."
+  ]
+}
