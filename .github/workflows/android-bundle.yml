@@ -1,4 +1,4 @@
-name: Build Android App Bundle
+name: Build Android Release and Test APK
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  bundle:
+  android:
     runs-on: ubuntu-latest
     steps:
       - name: Check out source
@@ -37,8 +37,13 @@ jobs:
           mkdir -p app/src/main/res/drawable-nodpi
           base64 --decode launcher-icon.png.b64 > app/src/main/res/drawable-nodpi/masterpiece_icon.png
 
-      - name: Build release bundle
-        run: gradle --no-daemon :app:bundleRelease
+      - name: Build test APK and release bundle
+        run: gradle --no-daemon :app:assembleDebug :app:bundleRelease
+
+      - name: Verify test APK
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk Masterpiece-Wallpapers-AI1-v1.6-test.apk
+          apksigner verify --verbose Masterpiece-Wallpapers-AI1-v1.6-test.apk
 
       - name: Restore encrypted upload keystore
         env:
@@ -50,17 +55,24 @@ jobs:
         env:
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
-          cp app/build/outputs/bundle/release/app-release.aab Masterpiece-Wallpapers-AI1-v1.5-signed.aab
+          cp app/build/outputs/bundle/release/app-release.aab Masterpiece-Wallpapers-AI1-v1.6-signed.aab
           jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
             -keystore "$RUNNER_TEMP/upload-key.jks" \
             -storepass "$KEYSTORE_PASSWORD" \
             -keypass "$KEYSTORE_PASSWORD" \
-            Masterpiece-Wallpapers-AI1-v1.5-signed.aab masterpiece-upload
-          jarsigner -verify -verbose -certs Masterpiece-Wallpapers-AI1-v1.5-signed.aab
+            Masterpiece-Wallpapers-AI1-v1.6-signed.aab masterpiece-upload
+          jarsigner -verify -verbose -certs Masterpiece-Wallpapers-AI1-v1.6-signed.aab
 
-      - name: Upload signed app bundle
+      - name: Upload installable test APK
         uses: actions/upload-artifact@v4
         with:
-          name: masterpiece-ai1-release-signed-aab
-          path: Masterpiece-Wallpapers-AI1-v1.5-signed.aab
+          name: masterpiece-ai1-v1.6-test-apk
+          path: Masterpiece-Wallpapers-AI1-v1.6-test.apk
+          if-no-files-found: error
+
+      - name: Upload signed Play Store bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: masterpiece-ai1-v1.6-release-aab
+          path: Masterpiece-Wallpapers-AI1-v1.6-signed.aab
           if-no-files-found: error
