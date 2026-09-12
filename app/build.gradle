@@ -6,6 +6,8 @@ android {
     namespace "com.masterpiece.wallpapers.ai"
     compileSdk 36
 
+    buildFeatures { buildConfig true }
+
     defaultConfig {
         applicationId "com.masterpiece.wallpapers.ai1"
         minSdk 23
