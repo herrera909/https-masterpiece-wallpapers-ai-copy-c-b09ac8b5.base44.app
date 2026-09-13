@@ -17,11 +17,12 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
-    private static final String APP_URL = "https://just-prime-pixel-ai.base44.app";
-    private static final String APP_HOST = "just-prime-pixel-ai.base44.app";
+    private static final String APP_URL = "https://masterpiece-wallpapers-ai.base44.app";
+    private static final String APP_HOST = "masterpiece-wallpapers-ai.base44.app";
     private WebView webView;
     private MasterpieceBillingBridge billingBridge;
     private AdMobBridge adMobBridge;
+    private WallpaperBridge wallpaperBridge;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override protected void onCreate(Bundle state) {
@@ -38,13 +39,15 @@ public class MainActivity extends AppCompatActivity {
         settings.setAllowFileAccess(false);
         settings.setAllowContentAccess(false);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-        settings.setUserAgentString(settings.getUserAgentString() + " MasterpieceWallpapersAI/1.7");
+        settings.setUserAgentString(settings.getUserAgentString() + " MasterpieceWallpapersAI/2.0");
         CookieManager.getInstance().setAcceptCookie(true);
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
         billingBridge = new MasterpieceBillingBridge(this, webView);
         adMobBridge = new AdMobBridge(this, root, webView);
+        wallpaperBridge = new WallpaperBridge(this, webView);
         webView.addJavascriptInterface(billingBridge, "MasterpieceNativeBilling");
         webView.addJavascriptInterface(adMobBridge, "MasterpieceNativeAds");
+        webView.addJavascriptInterface(wallpaperBridge, "MasterpieceNativeWallpaper");
         MobileAds.initialize(this);
         webView.setWebChromeClient(new WebChromeClient());
         webView.setWebViewClient(new WebViewClient() {

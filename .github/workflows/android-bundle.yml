@@ -58,8 +58,8 @@ jobs:
 
       - name: Verify test APK
         run: |
-          cp app/build/outputs/apk/debug/app-debug.apk Masterpiece-Wallpapers-AI1-v1.7-test.apk
-          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose Masterpiece-Wallpapers-AI1-v1.7-test.apk
+          cp app/build/outputs/apk/debug/app-debug.apk Masterpiece-Wallpapers-AI1-v2.0-test.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose Masterpiece-Wallpapers-AI1-v2.0-test.apk
 
       - name: Restore encrypted upload keystore
         env:
@@ -71,26 +71,26 @@ jobs:
         env:
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
-          cp app/build/outputs/bundle/release/app-release.aab Masterpiece-Wallpapers-AI1-v1.7-signed.aab
+          cp app/build/outputs/bundle/release/app-release.aab Masterpiece-Wallpapers-AI1-v2.0-signed.aab
           jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
             -keystore "$RUNNER_TEMP/upload-key.jks" \
             -storepass "$KEYSTORE_PASSWORD" \
             -keypass "$KEYSTORE_PASSWORD" \
-            Masterpiece-Wallpapers-AI1-v1.7-signed.aab masterpiece-upload
-          jarsigner -verify -verbose -certs Masterpiece-Wallpapers-AI1-v1.7-signed.aab
+            Masterpiece-Wallpapers-AI1-v2.0-signed.aab masterpiece-upload
+          jarsigner -verify -verbose -certs Masterpiece-Wallpapers-AI1-v2.0-signed.aab
 
       - name: Upload installable test APK
         uses: actions/upload-artifact@v4
         with:
-          name: masterpiece-ai1-v1.7-test-apk
-          path: Masterpiece-Wallpapers-AI1-v1.7-test.apk
+          name: masterpiece-ai1-v2.0-test-apk
+          path: Masterpiece-Wallpapers-AI1-v2.0-test.apk
           if-no-files-found: error
 
       - name: Upload signed Play Store bundle
         uses: actions/upload-artifact@v4
         with:
-          name: masterpiece-ai1-v1.7-release-aab
-          path: Masterpiece-Wallpapers-AI1-v1.7-signed.aab
+          name: masterpiece-ai1-v2.0-release-aab
+          path: Masterpiece-Wallpapers-AI1-v2.0-signed.aab
           if-no-files-found: error
 
-# Release verification: v1.7 (merged trigger)
+# Release verification: v2.0 fresh rebuild

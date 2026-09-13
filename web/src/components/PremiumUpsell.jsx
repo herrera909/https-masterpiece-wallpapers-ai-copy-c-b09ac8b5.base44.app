@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Crown, Check, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { startPremiumCheckout } from "@/lib/premiumCheckout";
+import { isNativeGooglePlay } from "@/lib/nativeBilling";
 
 const BENEFITS = [
   "Unlimited wallpaper downloads",
@@ -95,7 +96,7 @@ export default function PremiumUpsell({ premium, onSubscribed }) {
           )}
         </button>
         <p className="mt-3 text-center text-xs text-white/40">
-          Cancel anytime. Secure checkout by Base44 Payments.
+          Cancel anytime. Secure checkout by {isNativeGooglePlay() ? "Google Play" : "Base44 Payments"}.
         </p>
       </div>
     </div>

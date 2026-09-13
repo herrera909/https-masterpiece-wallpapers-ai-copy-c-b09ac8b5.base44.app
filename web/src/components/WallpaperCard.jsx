@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { Heart, Download, Trash2, Sparkles } from "lucide-react";
+import { Heart, Download, Trash2, Sparkles, Smartphone } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
 import { useToast } from "@/components/ui/use-toast";
 import AdGateModal from "@/components/AdGateModal";
 import nativeAds from "@/lib/nativeAds";
+import { applyWallpaper, isNativeWallpaper, saveWallpaper } from "@/lib/nativeWallpaper";
 
 export default function WallpaperCard({ wallpaper, onDelete, onRestore, onToggleFav, premium, onUpgrade }) {
   const [imgLoaded, setImgLoaded] = useState(false);
@@ -20,6 +21,12 @@ export default function WallpaperCard({ wallpaper, onDelete, onRestore, onToggle
   };
 
   const doDownload = () => {
+    if (isNativeWallpaper()) {
+      saveWallpaper(wallpaper.image_url, wallpaper.title, ({ success, message }) =>
+        toast({ title: message, variant: success ? undefined : "destructive" })
+      );
+      return;
+    }
     const a = document.createElement("a");
     a.href = wallpaper.image_url;
     a.download = `${wallpaper.title || "masterpiece-wallpaper"}.png`;
@@ -29,6 +36,12 @@ export default function WallpaperCard({ wallpaper, onDelete, onRestore, onToggle
     a.click();
     document.body.removeChild(a);
     toast({ title: "Downloading wallpaper" });
+  };
+
+  const handleSetWallpaper = () => {
+    applyWallpaper(wallpaper.image_url, ({ success, message }) =>
+      toast({ title: message, variant: success ? undefined : "destructive" })
+    );
   };
 
   const handleDelete = async () => {
@@ -107,6 +120,15 @@ export default function WallpaperCard({ wallpaper, onDelete, onRestore, onToggle
             >
               <Download className="h-4 w-4" />
             </button>
+            {isNativeWallpaper() && (
+              <button
+                onClick={handleSetWallpaper}
+                className="grid h-8 w-8 select-none place-items-center rounded-lg bg-fuchsia-500/80 text-white hover:bg-fuchsia-400 transition-colors"
+                title="Set as wallpaper"
+              >
+                <Smartphone className="h-4 w-4" />
+              </button>
+            )}
             <button
               onClick={handleDelete}
               className="grid h-8 w-8 select-none place-items-center rounded-lg bg-rose-500/80 text-white hover:bg-rose-400 transition-colors"
