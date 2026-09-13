@@ -92,3 +92,5 @@ jobs:
           name: masterpiece-ai1-v1.7-release-aab
           path: Masterpiece-Wallpapers-AI1-v1.7-signed.aab
           if-no-files-found: error
+
+# Release verification: v1.7
