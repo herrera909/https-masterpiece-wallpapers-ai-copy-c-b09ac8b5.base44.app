@@ -3,7 +3,7 @@ name: Build Android Release and Test APK
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, fresh-rebuild-v2]
 
 permissions:
   contents: read
