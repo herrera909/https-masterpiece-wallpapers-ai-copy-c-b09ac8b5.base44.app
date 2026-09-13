@@ -1,4 +1,5 @@
 import { base44 } from "@/api/base44Client";
+import { verifyAndAcknowledgeGooglePlayPurchase } from "@/lib/googlePlayPurchase";
 
 export const GOOGLE_PLAY_SUBSCRIPTION_ID = "masterpiece_premium_monthly";
 const BRIDGE_NAME = "MasterpieceNativeBilling";
@@ -13,21 +14,29 @@ let pendingPurchase = null;
 if (typeof window !== "undefined") {
   window.__masterpieceBilling = {
     async onPurchaseCompleted(productId, purchaseToken) {
-      if (!pendingPurchase || productId !== GOOGLE_PLAY_SUBSCRIPTION_ID) return;
+      if (productId !== GOOGLE_PLAY_SUBSCRIPTION_ID || !purchaseToken) return;
       try {
-        const response = await base44.functions.invoke("verify-google-play-purchase", {
+        const result = await verifyAndAcknowledgeGooglePlayPurchase({
           productId,
-          purchaseToken
+          purchaseToken,
+          expectedProductId: GOOGLE_PLAY_SUBSCRIPTION_ID,
+          verify: async (purchase) => {
+            const response = await base44.functions.invoke("verify-google-play-purchase", purchase);
+            return response.data;
+          },
+          acknowledge: (token) => bridge()?.acknowledgePurchase(token),
+          notify: () => window.dispatchEvent(new CustomEvent("masterpiece-premium-updated"))
         });
-        if (!response.data?.premium) {
-          throw new Error("Google Play purchase could not be verified");
-        }
-        pendingPurchase.resolve({ provider: "google_play", premium: true });
+        pendingPurchase?.resolve(result);
       } catch (error) {
-        pendingPurchase.reject(error);
+        pendingPurchase?.reject(error);
       } finally {
         pendingPurchase = null;
       }
+    },
+    onPurchasePending() {
+      pendingPurchase?.reject(new Error("Purchase is pending approval"));
+      pendingPurchase = null;
     },
     onPurchaseCancelled() {
       pendingPurchase?.reject(new Error("Purchase cancelled"));
@@ -38,6 +47,9 @@ if (typeof window !== "undefined") {
       pendingPurchase = null;
     }
   };
+
+  // Restoration must start only after the callback object above exists.
+  bridge()?.restorePurchases();
 }
 
 export function startGooglePlaySubscription() {

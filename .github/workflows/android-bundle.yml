@@ -15,6 +15,22 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Verify web app
+        working-directory: web
+        run: |
+          npm ci
+          npm test
+          npm run build
+          npm run lint
+          npm run typecheck
+
       - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
@@ -38,25 +54,12 @@ jobs:
           base64 --decode launcher-icon.png.b64 > app/src/main/res/drawable-nodpi/masterpiece_icon.png
 
       - name: Build test APK and release bundle
-        run: |
-          set +e
-          gradle --no-daemon :app:assembleDebug :app:bundleRelease > android-build.log 2>&1
-          result=$?
-          cat android-build.log
-          exit $result
-
-      - name: Upload build diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-build-diagnostics
-          path: android-build.log
-          if-no-files-found: warn
+        run: gradle --no-daemon :app:assembleDebug :app:bundleRelease
 
       - name: Verify test APK
         run: |
-          cp app/build/outputs/apk/debug/app-debug.apk Masterpiece-Wallpapers-AI1-v1.6-test.apk
-          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose Masterpiece-Wallpapers-AI1-v1.6-test.apk
+          cp app/build/outputs/apk/debug/app-debug.apk Masterpiece-Wallpapers-AI1-v1.7-test.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose Masterpiece-Wallpapers-AI1-v1.7-test.apk
 
       - name: Restore encrypted upload keystore
         env:
@@ -68,24 +71,24 @@ jobs:
         env:
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
-          cp app/build/outputs/bundle/release/app-release.aab Masterpiece-Wallpapers-AI1-v1.6-signed.aab
+          cp app/build/outputs/bundle/release/app-release.aab Masterpiece-Wallpapers-AI1-v1.7-signed.aab
           jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
             -keystore "$RUNNER_TEMP/upload-key.jks" \
             -storepass "$KEYSTORE_PASSWORD" \
             -keypass "$KEYSTORE_PASSWORD" \
-            Masterpiece-Wallpapers-AI1-v1.6-signed.aab masterpiece-upload
-          jarsigner -verify -verbose -certs Masterpiece-Wallpapers-AI1-v1.6-signed.aab
+            Masterpiece-Wallpapers-AI1-v1.7-signed.aab masterpiece-upload
+          jarsigner -verify -verbose -certs Masterpiece-Wallpapers-AI1-v1.7-signed.aab
 
       - name: Upload installable test APK
         uses: actions/upload-artifact@v4
         with:
-          name: masterpiece-ai1-v1.6-test-apk
-          path: Masterpiece-Wallpapers-AI1-v1.6-test.apk
+          name: masterpiece-ai1-v1.7-test-apk
+          path: Masterpiece-Wallpapers-AI1-v1.7-test.apk
           if-no-files-found: error
 
       - name: Upload signed Play Store bundle
         uses: actions/upload-artifact@v4
         with:
-          name: masterpiece-ai1-v1.6-release-aab
-          path: Masterpiece-Wallpapers-AI1-v1.6-signed.aab
+          name: masterpiece-ai1-v1.7-release-aab
+          path: Masterpiece-Wallpapers-AI1-v1.7-signed.aab
           if-no-files-found: error

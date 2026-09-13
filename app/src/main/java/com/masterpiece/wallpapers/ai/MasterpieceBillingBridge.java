@@ -19,7 +19,9 @@ public final class MasterpieceBillingBridge implements PurchasesUpdatedListener 
         this.webView = webView;
         client = BillingClient.newBuilder(activity).setListener(this)
             .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build()).build();
-        connect(this::restore);
+        // The page installs its JavaScript callback after this object is created.
+        // Let the page request restoration once that callback is ready.
+        connect(() -> {});
     }
 
     private void connect(Runnable ready) {
@@ -29,8 +31,25 @@ public final class MasterpieceBillingBridge implements PurchasesUpdatedListener 
                 if (r.getResponseCode() == BillingClient.BillingResponseCode.OK) ready.run();
                 else fail(r.getDebugMessage());
             }
-            @Override public void onBillingServiceDisconnected() {}
+            @Override public void onBillingServiceDisconnected() {
+                // The next purchase or restore request reconnects.
+            }
         });
+    }
+
+    @JavascriptInterface public void restorePurchases() {
+        activity.runOnUiThread(() -> connect(this::restore));
+    }
+
+    @JavascriptInterface public void acknowledgePurchase(String purchaseToken) {
+        if (purchaseToken == null || purchaseToken.isEmpty()) return;
+        activity.runOnUiThread(() -> connect(() -> client.acknowledgePurchase(
+            AcknowledgePurchaseParams.newBuilder().setPurchaseToken(purchaseToken).build(),
+            result -> {
+                if (result.getResponseCode() != BillingClient.BillingResponseCode.OK) {
+                    fail(result.getDebugMessage());
+                }
+            })));
     }
 
     @JavascriptInterface public void launchSubscription(String productId) {
@@ -53,8 +72,11 @@ public final class MasterpieceBillingBridge implements PurchasesUpdatedListener 
             ProductDetails details = products.get(0);
             List<ProductDetails.SubscriptionOfferDetails> offers = details.getSubscriptionOfferDetails();
             if (offers == null || offers.isEmpty()) { fail("No active monthly offer is configured"); return; }
+            ProductDetails.SubscriptionOfferDetails selected = offers.stream()
+                .filter(offer -> "monthly".equals(offer.getBasePlanId()))
+                .findFirst().orElse(offers.get(0));
             BillingFlowParams.ProductDetailsParams item = BillingFlowParams.ProductDetailsParams.newBuilder()
-                .setProductDetails(details).setOfferToken(offers.get(0).getOfferToken()).build();
+                .setProductDetails(details).setOfferToken(selected.getOfferToken()).build();
             BillingResult launch = client.launchBillingFlow(activity, BillingFlowParams.newBuilder()
                 .setProductDetailsParamsList(Collections.singletonList(item)).build());
             if (launch.getResponseCode() != BillingClient.BillingResponseCode.OK) fail(launch.getDebugMessage());
@@ -81,14 +103,14 @@ public final class MasterpieceBillingBridge implements PurchasesUpdatedListener 
     }
 
     private void handle(Purchase purchase) {
-        if (purchase.getPurchaseState() != Purchase.PurchaseState.PURCHASED ||
-            !purchase.getProducts().contains(PRODUCT_ID)) return;
+        if (!purchase.getProducts().contains(PRODUCT_ID)) return;
+        if (purchase.getPurchaseState() == Purchase.PurchaseState.PENDING) {
+            js("window.__masterpieceBilling&&window.__masterpieceBilling.onPurchasePending()");
+            return;
+        }
+        if (purchase.getPurchaseState() != Purchase.PurchaseState.PURCHASED) return;
         js("window.__masterpieceBilling&&window.__masterpieceBilling.onPurchaseCompleted(" +
             JSONObject.quote(PRODUCT_ID) + "," + JSONObject.quote(purchase.getPurchaseToken()) + ")");
-        if (!purchase.isAcknowledged()) {
-            client.acknowledgePurchase(AcknowledgePurchaseParams.newBuilder()
-                .setPurchaseToken(purchase.getPurchaseToken()).build(), result -> {});
-        }
     }
 
     private void fail(String message) {

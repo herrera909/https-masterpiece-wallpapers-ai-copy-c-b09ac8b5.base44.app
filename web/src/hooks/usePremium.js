@@ -21,6 +21,8 @@ export default function usePremium() {
 
   useEffect(() => {
     refresh();
+    window.addEventListener("masterpiece-premium-updated", refresh);
+    return () => window.removeEventListener("masterpiece-premium-updated", refresh);
   }, [refresh]);
 
   return { premium, loggedIn, loading, refresh };

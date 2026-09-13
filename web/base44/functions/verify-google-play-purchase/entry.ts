@@ -87,6 +87,13 @@ export default async function(req: Request) {
     const db = base44.asServiceRole;
     const existing = await db.entities.Base44Purchase.filter({ checkoutSessionId });
 
+    // A Play purchase token is a single-user entitlement. Never let a token
+    // already claimed by one account unlock a different account.
+    if (existing.length && existing[0].appUserId !== user.id) {
+      console.error("verify-google-play-purchase: token already claimed by another user");
+      return Response.json({ error: "Purchase is linked to another account" }, { status: 409 });
+    }
+
     if (!existing.length) {
       await db.entities.Base44Purchase.create({
         checkoutSessionId,

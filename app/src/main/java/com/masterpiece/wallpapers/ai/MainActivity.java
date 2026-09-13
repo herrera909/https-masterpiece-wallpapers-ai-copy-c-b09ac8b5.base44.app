@@ -18,6 +18,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
     private static final String APP_URL = "https://just-prime-pixel-ai.base44.app";
+    private static final String APP_HOST = "just-prime-pixel-ai.base44.app";
     private WebView webView;
     private MasterpieceBillingBridge billingBridge;
     private AdMobBridge adMobBridge;
@@ -37,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
         settings.setAllowFileAccess(false);
         settings.setAllowContentAccess(false);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-        settings.setUserAgentString(settings.getUserAgentString() + " MasterpieceWallpapersAI/1.6");
+        settings.setUserAgentString(settings.getUserAgentString() + " MasterpieceWallpapersAI/1.7");
         CookieManager.getInstance().setAcceptCookie(true);
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
         billingBridge = new MasterpieceBillingBridge(this, webView);
@@ -50,7 +51,8 @@ public class MainActivity extends AppCompatActivity {
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
                 String scheme = uri.getScheme();
-                if ("https".equalsIgnoreCase(scheme) || "http".equalsIgnoreCase(scheme)) return false;
+                String host = uri.getHost();
+                if ("https".equalsIgnoreCase(scheme) && APP_HOST.equalsIgnoreCase(host)) return false;
                 try { startActivity(new Intent(Intent.ACTION_VIEW, uri)); } catch (Exception ignored) {}
                 return true;
             }
