@@ -17,8 +17,8 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
-    private static final String APP_URL = "https://masterpiece-wallpapers-ai.base44.app";
-    private static final String APP_HOST = "masterpiece-wallpapers-ai.base44.app";
+    private static final String APP_URL = "https://mindful-vivid-wall-craft.base44.app";
+    private static final String APP_HOST = "mindful-vivid-wall-craft.base44.app";
     private WebView webView;
     private MasterpieceBillingBridge billingBridge;
     private AdMobBridge adMobBridge;
