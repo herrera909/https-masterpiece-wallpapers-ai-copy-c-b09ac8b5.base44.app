@@ -1,12 +1,9 @@
-name: Build Android Release and Test APK
-
-on:
-  workflow_dispatch:
-  push:
     branches: [main, fresh-rebuild-v2]
+
 
 permissions:
   contents: read
+
 
 jobs:
   android:
@@ -15,12 +12,14 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: npm
           cache-dependency-path: web/package-lock.json
+
 
       - name: Verify web app
         working-directory: web
@@ -31,17 +30,21 @@ jobs:
           npm run lint
           npm run typecheck
 
+
       - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
 
+
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
+
 
       - name: Install Android API 36
         run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -53,19 +56,23 @@ jobs:
           mkdir -p app/src/main/res/drawable-nodpi
           base64 --decode launcher-icon.png.b64 > app/src/main/res/drawable-nodpi/masterpiece_icon.png
 
+
       - name: Build test APK and release bundle
         run: gradle --no-daemon :app:assembleDebug :app:bundleRelease
+
 
       - name: Verify test APK
         run: |
           cp app/build/outputs/apk/debug/app-debug.apk Masterpiece-Wallpapers-AI1-v2.0-test.apk
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose Masterpiece-Wallpapers-AI1-v2.0-test.apk
 
+
       - name: Restore encrypted upload keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
           printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/upload-key.jks"
+
 
       - name: Sign and verify release bundle
         env:
@@ -79,6 +86,7 @@ jobs:
             Masterpiece-Wallpapers-AI1-v2.0-signed.aab masterpiece-upload
           jarsigner -verify -verbose -certs Masterpiece-Wallpapers-AI1-v2.0-signed.aab
 
+
       - name: Upload installable test APK
         uses: actions/upload-artifact@v4
         with:
@@ -86,11 +94,8 @@ jobs:
           path: Masterpiece-Wallpapers-AI1-v2.0-test.apk
           if-no-files-found: error
 
+
       - name: Upload signed Play Store bundle
         uses: actions/upload-artifact@v4
         with:
           name: masterpiece-ai1-v2.0-release-aab
-          path: Masterpiece-Wallpapers-AI1-v2.0-signed.aab
-          if-no-files-found: error
-
-# Release verification: v2.0 fresh rebuild
