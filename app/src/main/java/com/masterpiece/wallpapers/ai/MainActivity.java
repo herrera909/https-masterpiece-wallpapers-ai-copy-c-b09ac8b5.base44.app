@@ -17,8 +17,8 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
-    private static final String APP_URL = "https://mindful-vivid-wall-craft.base44.app";
-    private static final String APP_HOST = "mindful-vivid-wall-craft.base44.app";
+    private static final String APP_URL = "https://masterpiecewallpapersai.base44.app";
+    private static final String APP_HOST = "masterpiecewallpapersai.base44.app";
     private WebView webView;
     private MasterpieceBillingBridge billingBridge;
     private AdMobBridge adMobBridge;
@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
         settings.setAllowFileAccess(false);
         settings.setAllowContentAccess(false);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-        settings.setUserAgentString(settings.getUserAgentString() + " MasterpieceWallpapersAI/2.0");
+        settings.setUserAgentString(settings.getUserAgentString() + " MasterpieceWallpapersAI/2.1");
         CookieManager.getInstance().setAcceptCookie(true);
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
         billingBridge = new MasterpieceBillingBridge(this, webView);
@@ -61,7 +61,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         webView.setDownloadListener((url, agent, disposition, type, length) -> {
-            try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))); } catch (Exception ignored) {}
+            if (wallpaperBridge != null) {
+                wallpaperBridge.save(url, "masterpiece-wallpaper");
+            }
         });
         if (state == null) webView.loadUrl(APP_URL); else webView.restoreState(state);
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
